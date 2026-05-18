@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}
+
+\bibitem{ieee2023}
+{University of Pitsburg}, ``{IEEE} style.''
+  \url{https://pitt.libguides.com/citationhelp/ieee}.
+\newblock Accessed on May 4, 2023.
+
+\bibitem{mihelj2019robotics}
+M.~Mihelj, T.~Bajd, A.~Ude, J.~Lenarčič, A.~Stanovnik, M.~Munih, J.~Rejc, and
+  S.~Šlajpah, {\em Robotics}.
+\newblock Springer, 2019.
+
+\bibitem{abbott2007pseudo}
+J.~J. Abbott and A.~M. Okamura, ``Pseudo-admittance bilateral telemanipulation
+  with guidance virtual fixtures,'' {\em The International Journal of Robotics
+  Research}, vol.~26, no.~8, pp.~865--884, 2007.
+
+\bibitem{beravs2011development}
+T.~Beravs, P.~Reberšek, D.~Novak, J.~Podobnik, and M.~Munih, ``Development and
+  validation of a wearable inertial measurement system for use with lower limb
+  exoskeletons,'' in {\em 2011 11th IEEE-RAS International Conference on
+  Humanoid Robots}, pp.~212--217, IEEE, 2011.
+
+\bibitem{structure2023}
+{IEEE.org}, ``Structure your paper.''
+  \url{https://conferences.ieeeauthorcenter.ieee.org/write-your-paper/structure-your-paper/}.
+\newblock Accessed on May 5, 2023.
+
+\end{thebibliography}

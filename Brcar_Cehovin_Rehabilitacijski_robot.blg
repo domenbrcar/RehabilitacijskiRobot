@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99e
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: Brcar_Cehovin_Rehabilitacijski_robot.aux
+Reallocating 'name_of_file' (item size: 1) to 7 items.
+The style file: ieeetr.bst
+Reallocating 'name_of_file' (item size: 1) to 11 items.
+Database file #1: sample_bib.bib
+You've used 5 entries,
+            1876 wiz_defined-function locations,
+            508 strings with 4512 characters,
+and the built_in function-call counts, 1249 in all, are:
+= -- 116
+> -- 59
+< -- 0
++ -- 22
+- -- 17
+* -- 81
+:= -- 185
+add.period$ -- 8
+call.type$ -- 5
+change.case$ -- 4
+chr.to.int$ -- 0
+cite$ -- 5
+duplicate$ -- 55
+empty$ -- 124
+format.name$ -- 17
+if$ -- 301
+int.to.chr$ -- 0
+int.to.str$ -- 5
+missing$ -- 4
+newline$ -- 21
+num.names$ -- 5
+pop$ -- 27
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 37
+stack$ -- 0
+substring$ -- 64
+swap$ -- 19
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 11
+width$ -- 6
+write$ -- 50
