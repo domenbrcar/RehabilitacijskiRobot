@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+.venv/
 
 src/results/
 
@@ -11,3 +12,8 @@ report/*.log
 report/*.out
 report/*.toc
 report/*.synctex.gz
+report/.mplconfig/
+report/overleaf_*.zip
+
+LaTeX_example.zip
+RehabilitacijskiRobot-*/
