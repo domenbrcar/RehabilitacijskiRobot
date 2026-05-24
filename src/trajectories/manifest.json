@@ -1,0 +1,99 @@
+{
+  "updated": "2026-05-20",
+  "description": "Cleaned trajectory and CMP dataset for main_sposobnost_v4.ipynb.",
+  "trajectories": [
+    {
+      "file": "premik_v1.npz",
+      "kind": "premik",
+      "samples": 599,
+      "duration_s": 5.98,
+      "joints": 7
+    },
+    {
+      "file": "zogica_1.npz",
+      "kind": "zogica_1",
+      "samples": 804,
+      "duration_s": 8.03,
+      "joints": 7
+    },
+    {
+      "file": "zogica_2.npz",
+      "kind": "zogica_2",
+      "samples": 610,
+      "duration_s": 6.09,
+      "joints": 7
+    },
+    {
+      "file": "zogica_3.npz",
+      "kind": "zogica_3",
+      "samples": 585,
+      "duration_s": 5.84,
+      "joints": 7
+    }
+  ],
+  "cmp": [
+    {
+      "file": "cmp_premik_v1.npz",
+      "trajectory": "premik_v1.npz",
+      "direction": "naprej",
+      "samples": 597,
+      "duration_s": 5.96,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_1_naprej.npz",
+      "trajectory": "zogica_1.npz",
+      "direction": "naprej",
+      "samples": 802,
+      "duration_s": 8.01,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_1_nazaj.npz",
+      "trajectory": "zogica_1.npz",
+      "direction": "nazaj",
+      "samples": 802,
+      "duration_s": 8.01,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_2_naprej.npz",
+      "trajectory": "zogica_2.npz",
+      "direction": "naprej",
+      "samples": 608,
+      "duration_s": 6.07,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_2_nazaj.npz",
+      "trajectory": "zogica_2.npz",
+      "direction": "nazaj",
+      "samples": 608,
+      "duration_s": 6.07,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_3_naprej.npz",
+      "trajectory": "zogica_3.npz",
+      "direction": "naprej",
+      "samples": 583,
+      "duration_s": 5.82,
+      "joints": 7
+    },
+    {
+      "file": "cmp_zogica_3_nazaj.npz",
+      "trajectory": "zogica_3.npz",
+      "direction": "nazaj",
+      "samples": 583,
+      "duration_s": 5.82,
+      "joints": 7
+    }
+  ],
+  "points": [
+    {
+      "file": "zacetna_tocka_zogice.npz",
+      "kind": "zacetna_tocka",
+      "joints": 7
+    }
+  ]
+}
