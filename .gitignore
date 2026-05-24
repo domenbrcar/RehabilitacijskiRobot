@@ -13,7 +13,6 @@ report/*.out
 report/*.toc
 report/*.synctex.gz
 report/.mplconfig/
-report/overleaf_*.zip
 
 LaTeX_example.zip
 RehabilitacijskiRobot-*/
