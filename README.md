@@ -1,7 +1,7 @@
 # RehabilitacijskiRobot
 
 Urejena verzija projekta za rehabilitacijski robot Panda. Glavni program je
-`src/main_sposobnost_v4.ipynb`; stare razvojne verzije so odstranjene iz
+`src/main`; stare razvojne verzije so odstranjene iz
 delovne strukture.
 
 ## Struktura
