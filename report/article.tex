@@ -30,165 +30,175 @@
 \maketitle
 
 \begin{abstract}{Povzetek}
-Članek opisuje izvedbo rehabilitacijske naloge na robotu Franka Emika Panda,
-kjer je gib opisan z dinamičnimi gibalnimi primitivami (DMP), mehka pomoč pa
-z naučenimi kompenzacijskimi navori CMP. Cilj ni samo ponoviti demonstrirano
-trajektorijo, temveč omogočiti nastavljivo pomoč glede na sposobnost uporabnika.
-V končni programski verziji se posname začetna lega, iz demonstracij se
-zgradi DMP referenca, iz meritev navorov se nauči CMP profil, izvedba pa
-skalira dodani navor z enim parametrom sposobnosti. Uporabljene so
-štiri trajektorije: osnovni premik in tri poti za zaporedje z žogico. Za vsako
-pot žogice sta pripravljena ločena CMP signala za gib naprej in povratek po
-isti poti. Sistem med prehodi ne preide v popolno podajnost, ampak stabilno
-drži trenutno oziroma ciljno lego.
+Članek opisuje rehabilitacijski sistem za zgornjo okončino z robotom Franka
+Emika Panda. Terapevtski gibi so zajeti z ročnim vodenjem robota in zapisani z
+dinamičnimi gibalnimi primitivami (DMP), dodatna robotska pomoč pa je naučena
+kot kompenzacijski navorni profil CMP. Takšna zasnova loči kinematično
+referenco od mehke dinamične pomoči: DMP določa ponovljivo sklepno
+trajektorijo, CMP pa pri izvedbi doda omejen navorni prispevek, ki se skalira
+glede na ocenjeno sposobnost uporabnika. Naloga je sestavljena iz osnovnega
+premika in treh zaporednih gibov proti žogici. Za gibe proti cilju in za
+povratne gibe so uporabljeni ločeni CMP profili, sistem pa med prehodi ohranja
+aktivno držanje trenutne lege. Rezultati prikazujejo posnete sklepne
+trajektorije, naučene CMP profile in omejen pilotni pregled vpliva dodatne
+obremenitve.
 \end{abstract}
 
 \section{Uvod}
 
-Robotska rehabilitacija zgornje okončine temelji na ponovljivem izvajanju
-nalog, merjenju odziva in varni fizični interakciji z uporabnikom. Klinični
-pregledi poročajo, da lahko elektromehanski oziroma robotski sistemi po
-možganski kapi izboljšajo aktivnosti vsakdanjega življenja, funkcijo roke in
-mišično moč, vendar so učinki odvisni od izvedbe terapije, doziranja in
-značilnosti uporabnika~\cite{mehrholz2018cochrane}. Klasična dela s področja
-robot-aided neurorehabilitation zato poudarjajo ponovljivost, merljivost in
-interaktivno vodenje kot glavne prednosti robotskih sistemov~\cite{krebs1998robot}.
+Robotska rehabilitacija zgornje okončine omogoča ponovljivo izvajanje
+terapevtskih nalog, merjenje poteka gibanja in nadzorovano fizično interakcijo
+med uporabnikom in robotom. Pri rehabilitaciji po nevroloških poškodbah je
+pomembno, da uporabnik pri nalogi aktivno sodeluje, robot pa mu pomaga le toliko,
+kolikor je potrebno za varno in uspešno izvedbo. Pregledi področja poročajo, da
+lahko elektromehanski in robotski sistemi izboljšajo funkcijo roke, mišično moč
+in aktivnosti vsakdanjega življenja, vendar so učinki odvisni od zasnove
+terapije, intenzivnosti vadbe in stopnje uporabnikovega sodelovanja
+\cite{mehrholz2018cochrane}. Že zgodnja dela s področja robot-aided
+neurorehabilitation zato poudarjajo ponovljivost, merljivost in možnost
+interaktivnega vodenja kot ključne prednosti robotske vadbe
+\cite{krebs1998robot}.
 
-Pri sodelovanju človeka in robota sama natančnost sledenja ni dovolj. Robot
-mora nalogo izvajati dovolj stabilno, da ne ogroža uporabnika, hkrati pa ne
-sme postati tog manipulator, ki bi uporabniku odvzel aktivno vlogo. To je
-razlog, da je v projektu uporabljen koncept pomoči po potrebi: referenčna
-trajektorija je vedno določena, dodatni navor pa je nastavljiv in omejen.
-Takšen pristop se naravno navezuje na impedančno vodenje, kjer robot ni opisan
-le kot sledilnik položaja, temveč kot mehanski sistem z izbrano togostjo,
-dušenjem in vztrajnostjo~\cite{hogan1985impedance}.
+Pri vodenju rehabilitacijskega robota ni dovolj, da manipulator natančno sledi
+geometrijski poti. Sistem mora biti hkrati stabilen, dovolj podajen za fizično
+interakcijo in prilagodljiv različnim sposobnostim uporabnika. Preveč togo
+sledenje lahko uporabniku odvzame aktivno vlogo, preveč podajno vodenje pa lahko
+povzroči nenadzorovane premike roke. Zato se v rehabilitacijski robotiki pogosto
+uporabljajo pristopi, povezani z impedančnim vodenjem, kjer robot ni obravnavan
+le kot sledilnik položaja, temveč kot mehanski sistem z določeno togostjo,
+dušenjem in interakcijskim odzivom \cite{hogan1985impedance}.
 
-Za zapis referenčnih gibov so uporabljene dinamične gibalne primitive (DMP).
-DMP so stabilni nelinearni dinamični sistemi, ki ločijo osnovno privlačno
-dinamiko od naučenega nelinearnega člena. Zato lahko iz ene demonstracije
-zapišejo gladek gib, ga reproducirajo z enako končno točko in ga po potrebi
-časovno skalirajo~\cite{schaal2006dmp,ijspeert2013dmp}. Novejši pregled
-Saveriana idr. DMP umešča med standardna orodja učenja iz demonstracije,
-interakcije z okoljem in robotike v kontaktu~\cite{saveriano2023dmp}.
+V predstavljenem sistemu je terapevtski gib opisan z dinamičnimi gibalnimi
+primitivami. DMP so primerni za učenje iz demonstracij, ker iz izmerjene
+trajektorije zgradijo stabilen dinamični model, ki ga je mogoče gladko
+reproducirati in časovno skalirati \cite{schaal2006dmp,ijspeert2013dmp}. V
+robotiki se uporabljajo kot standardno orodje za zapis motoričnih spretnosti,
+generalizacijo gibov in delo v kontaktu z okoljem \cite{saveriano2023dmp}. Za
+dodatno pomoč pri izvedbi je uporabljen koncept kompenzacijskih navornih
+profilov CMP, ki poleg kinematične poti modelirajo še dinamični prispevek naloge
+\cite{denisa2016cmp,petric2018cmp}. Cilj dela ni klinična validacija, temveč
+izvedba in analiza laboratorijskega sistema, ki združuje DMP učenje gibov, CMP
+pomoč in nastavljivo stopnjo sodelovanja uporabnika.
 
 \section{DMP zapis giba}
 
-Diskretni DMP za en sklep je zapisan s kanonično fazno spremenljivko $x$ in
-transformacijskim sistemom za položaj $y$. Faza pada od $1$ proti $0$:
+Gibi so obravnavani v sklepnem prostoru robota Panda. Vsak od sedmih sklepov je
+opisan kot časovni signal položaja in hitrosti, demonstracija pa določa začetno
+lego, končno lego in obliko gibanja. Diskretni DMP za posamezen sklep uporablja
+kanonično fazno spremenljivko $x$, ki monotono pada od začetka proti koncu giba:
 \begin{equation}
     \tau \dot{x} = -a_x x ,
     \label{eq:canonical}
 \end{equation}
-kjer je $\tau$ trajanje giba. Transformacijski sistem je
+kjer $\tau$ označuje trajanje giba. Transformacijski sistem za sklepni položaj
+$y$ je podan z
 \begin{equation}
     \tau \dot{z} = a_z \left(b_z (g-y) - z \right) + f(x),
     \qquad
-    \tau \dot{y} = z .
+    \tau \dot{y} = z ,
     \label{eq:transform}
 \end{equation}
-Pri $b_z=a_z/4$ je osnovni del kritično dušen sistem, ki konvergira proti
-cilju $g$. Naučeni člen $f(x)$ doda obliko demonstrirane trajektorije:
+kjer je $g$ ciljna lega sklepa. Pri izbiri $b_z=a_z/4$ je osnovni del sistema
+kritično dušen in zato stabilno konvergira proti cilju. Obliko demonstriranega
+giba določa nelinearni člen
 \begin{align}
     f(x) &=
     x\frac{\sum_{i=1}^{N} \psi_i(x) w_i}
          {\sum_{i=1}^{N} \psi_i(x)}, \nonumber\\
-    \psi_i(x) &= \exp\left(-\frac{(x-c_i)^2}{2\sigma_i}\right).
+    \psi_i(x) &= \exp\left(-\frac{(x-c_i)^2}{2\sigma_i}\right),
     \label{eq:forcing}
 \end{align}
-Uteži $w_i$ se določijo z najmanjšimi kvadrati iz demonstracije
-$q(t),\dot{q}(t),\ddot{q}(t)$. V implementaciji se to naredi ločeno za vseh
-sedem sklepov robota Panda. Demonstracija se najprej prebere iz datoteke
-\texttt{.npz}, nato se izgradi matrika baznih funkcij, rešitev linearnega
-sistema pa določi DMP uteži. Isti postopek se uporablja za osnovni premik in
-za tri trajektorije naloge z žogico.
+kjer so $\psi_i$ lokalne bazne funkcije, $w_i$ pa uteži, določene iz
+demonstracije z metodo najmanjših kvadratov.
 
-Prednost DMP v tem projektu je praktična. Referenca ni neposredno surov
-posnetek, ampak zglajen dinamični model. Robot zato dobi zvezen potek
-$q_\mathrm{ref}(t)$ in $\dot{q}_\mathrm{ref}(t)$, kar zmanjša sunkovite ukaze
-pri izvedbi. DMP hkrati ne zahteva popolnega modela robota ali uporabnika;
-zadostuje demonstracija v sklepnem prostoru. To je primerno za laboratorijsko
-rehabilitacijsko nalogo, kjer je cilj ponovljiva vaja, ne splošno načrtovanje
-poljubnih gibov.
+V predstavljenem sistemu se DMP identificira ločeno za vse sklepe. Iz ročno
+zajete demonstracije dobimo zaporedje sklepnih položajev $q(t)$ in hitrosti
+$\dot{q}(t)$, iz katerih se naučijo uteži DMP modela. Rezultat učenja ni surov
+posnetek, temveč gladka referenca $q_\mathrm{ref}(t)$ in
+$\dot{q}_\mathrm{ref}(t)$, ki jo lahko robot ponovi pri avtomatski izvedbi.
+Takšen zapis je primeren za rehabilitacijsko nalogo, ker omogoča ponovljivo
+izvedbo istega terapevtskega giba in hkrati ohranja obliko demonstracije, ki jo
+je določil operater z ročnim vodenjem.
 
 \section{CMP pomoč}
 
-Klasični DMP opisuje kinematiko giba. Pri nalogah v kontaktu pa sama pot ne
-pove, kakšni navori so potrebni za varno in dovolj natančno izvedbo. CMP
-(compliant movement primitives) zato razširijo idejo primitiv: poleg
-kinematične poti se nauči še dinamični oziroma navorni del naloge. Pregled
-Deniše idr. CMP opisuje kot okvir, kjer se z DMP zapiše želena kinematika,
-task-dependent dinamika pa se modelira z navorno primitivo~\cite{denisa2016cmp}.
-Sorodna dela z gibanjem v kontaktu kažejo, da je vključevanje interakcijskih
-signalov ključno, ko robot ne deluje v praznem prostoru~\cite{gams2014coupling}.
+DMP določa kinematični potek gibanja, ne določa pa neposredno, koliko dodatnega
+navora naj robot prispeva med fizično interakcijo. Pri rehabilitaciji je ta
+razlika pomembna: robot mora slediti terapevtski poti, hkrati pa uporabniku
+nuditi mehko pomoč, ki je lahko manjša ali večja glede na njegovo trenutno
+sposobnost. CMP pristop zato obravnava navorni signal kot dodatno primitivo,
+naučeno iz meritev pri izvedbi naloge. Sorodna dela kažejo, da so takšni
+interakcijski signali posebej pomembni pri gibih v kontaktu z okoljem ali
+človekom \cite{gams2014coupling}.
 
-V izvedbi projekta se CMP uči eksperimentalno. Robot najprej izvede DMP
-referenco v togem oziroma kontroliranem načinu, med izvedbo pa se shranijo
-merjeni sklepi, hitrosti in navori. Izmerjeni navori $\tau_m(t)$ se nato
-zapišejo z enakim DMP postopkom kot položaji. Rezultat je gladek profil
-$\tau_\mathrm{CMP}(t)$, ki se pri kasnejši rehabilitacijski izvedbi doda kot
-feedforward pomoč:
+Postopek učenja CMP poteka v dveh korakih. Najprej robot avtomatsko izvede DMP
+referenco, med izvedbo pa se merijo sklepni položaji, hitrosti in navori. Nato
+se izmerjeni navori zapišejo z enakim principom kot sklepni položaji, kar poda
+gladek profil $\tau_\mathrm{CMP}(t)$. Ta profil ni glavna trajektorija, ampak
+feedforward pomoč, ki se pri rehabilitacijski izvedbi doda ukazu robota:
 \begin{equation}
-    \tau_d(t) = \tau_\mathrm{ramp}(t)\,
-    k_\mathrm{CMP}\,\alpha\,\tau_\mathrm{CMP}(t).
+    \tau_d(t) =
+    r(t)\, k_\mathrm{CMP}\,\alpha\,\tau_\mathrm{CMP}(t).
     \label{eq:tauadd}
 \end{equation}
-Parameter
+Faktor $r(t)$ predstavlja rampo ob začetku in koncu giba, s katero se prepreči
+nenadno vklapljanje dodatnega navora. Parameter $\alpha$ je določen iz ocene
+sposobnosti uporabnika $S$:
 \begin{equation}
-    \alpha=\frac{100-\mathrm{SPOSOBNOST}}{100}
+    \alpha=\frac{100-S}{100}, \qquad S\in[0,100].
     \label{eq:alpha}
 \end{equation}
-pretvori uporabniško nastavitev v delež pomoči. Pri vrednosti 0 je
-$\alpha=1$, pri vrednosti 100 pa je
-$\alpha=0$. Dodani navor se pred pošiljanjem robotu omeji:
+Nizka vrednost $S$ pomeni, da uporabnik potrebuje več pomoči, zato je
+$\alpha$ večji. Visoka vrednost $S$ pomeni, da lahko uporabnik večji del naloge
+izvede sam, zato se dodani CMP navor zmanjša. Pred pošiljanjem robotu se
+dodatni navor še omeji:
 \begin{equation}
     \tau_d(t) = \mathrm{clip}\left(\tau_d(t),
     -\tau_\mathrm{lim},\tau_\mathrm{lim}\right).
     \label{eq:clip}
 \end{equation}
-Rampa $\tau_\mathrm{ramp}(t)$ na začetku in koncu giba prepreči skokovito
-vklapljanje pomoči. V trenutni nastavitvi je uporabljena meja
-$\tau_\mathrm{lim}=4$ Nm, faktor CMP pa je odvisen od sposobnosti uporabnika.
 
-Pomembna odločitev v verziji \texttt{sposobnost v4} je, da se za povratni gib
-ne uporabi samo negiran ali časovno obrnjen CMP signal. Za vsako trajektorijo
-žogice je shranjen ločen signal za smer naprej in smer nazaj. To je skladno s
-prakso DMP, kjer povratni gib ni nujno dinamično enak obratni smeri; drugačen
-kontakt, gravitacijski prispevek in začetna lega lahko zahtevajo drugačen
-navorni profil.
+Za nalogo z žogico so bili CMP profili naučeni ločeno za gib proti cilju in za
+povratni gib. To je pomembno, ker povratna smer ni nujno dinamično enaka
+časovno obrnjeni smeri naprej. Gravitacijski prispevek, začetna konfiguracija,
+kontakt z uporabnikom in smer premika lahko povzročijo drugačen navorni profil.
+Ločeni profili zato zmanjšajo možnost sunkovitih prehodov in omogočajo bolj
+stabilno zaporedno izvedbo nalog.
 
-\section{Programsko okolje}
+\section{Programsko in eksperimentalno okolje}
 
-Projekt je urejen v tri glavne mape. V mapi \texttt{src} sta glavni notebook
-verzije v4 in podporni datoteki \texttt{dmp.py} ter \texttt{utils.py}.
-Podmapa s trajektorijami vsebuje le podatke, ki jih uporablja končni program:
-začetno točko, štiri posnete trajektorije in sedem CMP datotek. Fotografije so
-v mapi \texttt{pictures}; originali HEIC so pretvorjeni v JPG, kontaktna slika
-pa je vključena v poročilo.
+Eksperimentalni sistem temelji na sedemosnem robotu Franka Emika Panda z
+robotskim prijemalom. Naloga je zasnovana kot rehabilitacijska vaja za zgornjo
+okončino, pri kateri uporabnik oziroma operater vodi končni efektor po
+predpisanih poteh. Zaporedje gibov simulira doseganje oziroma premikanje proti
+žogici, kar je primer ponovljive naloge z jasno začetno in ciljno lego. Robot je
+v fazi demonstracije ročno voden v podajnem načinu, s čimer lahko operater
+varno določi pot gibanja brez neposrednega programiranja sklepnih profilov.
 
-Notebook je razdeljen na logične sklope:
-\begin{enumerate}
-    \item inicializacija robota Panda in prijemala,
-    \item nastavitev poti, trajektorij, CMP datotek in parametra sposobnosti,
-    \item funkcije za snemanje, učenje DMP, učenje CMP in izvedbo,
-    \item snemanje začetne lege ter demonstracij,
-    \item nalaganje referenc, učenje oziroma nalaganje CMP signalov,
-    \item izvedba osnovnega premika in cikla žogica 1--2--3,
-    \item shranjevanje rezultatov in izris.
-\end{enumerate}
+Postopek priprave je sestavljen iz več zaporednih korakov. Najprej se robot
+postavi v začetno lego, ki služi kot referenca za nadaljnje gibe. Nato se
+posname osnovni premik, ki pripravi roko na izvajanje naloge, in tri
+trajektorije naloge z žogico. Iz vsake demonstracije se identificira DMP model,
+ki poda gladko sklepno referenco. V naslednjem koraku robot te reference izvede
+avtomatsko, pri čemer se merijo navori in se iz njih naučijo CMP profili. Za
+zaporedje z žogico se ločeno pripravijo profili za smer naprej in za povratno
+smer. Končna rehabilitacijska izvedba nato združi DMP referenco, skaliran CMP
+navor in stabilno držanje lege med posameznimi prehodi.
 
-Pri izvedbi se robot pred vsakim gibom premakne v začetno točko reference,
-jo kratek čas stabilno drži, nato izvede referenco z dodatnim CMP navorom.
-Po koncu giba robot ne preklopi v popolno podajnost, temveč drži zadnjo ciljno
-lego. Ta del je bil v projektu ključen, ker se pri zaporedju več trajektorij
-napake in prehodi sicer hitro poznajo kot padec roke ali neželen preskok med
-stanji.
+Zaradi varne rehabilitacijske izvedbe je bil sistem zasnovan tako, da med
+zaporednimi gibi ne preide v popolnoma podajno stanje. Po koncu posamezne
+trajektorije robot aktivno drži doseženo lego, naslednja trajektorija pa prevzame
+vodenje iz te stabilne konfiguracije. S tem se prepreči nenadzorovan premik
+manipulatorja pred začetkom naslednjega giba. Takšno obnašanje je pomembno pri
+delu z zgornjo okončino, saj nenadni potegi, padanje roke ali skoki navora niso
+sprejemljivi za terapevtsko uporabo.
 
 \section{Podatki in rezultati}
 
-Eksperimentalna postavitev je prikazana na sliki~\ref{fig:fotografije}. Slike
-so bile posnete v formatu HEIC in pretvorjene v JPG, ker je to robustnejši
-format za vključitev v \LaTeX. Tehnična vsebina poročila pa temelji na
-dejanskih datotekah \texttt{.npz}, ne na ročnem prepisovanju meritev.
+Eksperimentalna postavitev je prikazana na sliki~\ref{fig:fotografije}. Za
+glavni nabor rezultatov so bile zajete štiri demonstracije: osnovni premik ter
+tri trajektorije naloge z žogico. Vsi signali so zapisani v sklepnem prostoru
+sedemosnega robota in zajeti s frekvenco 100 Hz.
 
 \begin{figure}[!htb]
     \begin{center}
@@ -200,13 +210,13 @@ dejanskih datotekah \texttt{.npz}, ne na ročnem prepisovanju meritev.
 
 \begin{table}[htbp]
     \centering
-    \caption{Povzetek uporabljenih trajektorij}
+    \caption{Povzetek uporabljenih demonstracij}
     \label{tab:trajektorije}
     \begin{tabular}{lccc}
         \toprule
-        Trajektorija & Vzorci & Trajanje [s] & Sklepi \\
+        Gib & Vzorci & Trajanje [s] & Sklepi \\
         \midrule
-        Premik & 599 & 5.98 & 7 \\
+        Osnovni premik & 599 & 5.98 & 7 \\
         Žogica 1 & 804 & 8.03 & 7 \\
         Žogica 2 & 610 & 6.09 & 7 \\
         Žogica 3 & 585 & 5.84 & 7 \\
@@ -214,89 +224,118 @@ dejanskih datotekah \texttt{.npz}, ne na ročnem prepisovanju meritev.
     \end{tabular}
 \end{table}
 
-Tabela~\ref{tab:trajektorije} kaže, da so vse demonstracije počasne in
-primerne za rehabilitacijsko izvedbo. Najdaljša je prva trajektorija žogice,
-ki traja 8.03 s, osnovni premik pa traja 5.98 s. Število vzorcev je skladno s
-frekvenco snemanja 100 Hz. Povzetek je prikazan tudi na sliki
-\ref{fig:povzetek}.
+Tabela~\ref{tab:trajektorije} in slika~\ref{fig:povzetek} kažeta, da so
+demonstracije počasne in primerne za rehabilitacijsko izvedbo. Najdaljša je
+prva trajektorija naloge z žogico, ki traja približno 8 s, ostale pa trajajo
+med 5.8 s in 6.1 s. Takšna trajanja so skladna z nalogo, kjer je poudarek na
+vodeni, nadzorovani izvedbi in ne na hitrem premiku.
 
 \begin{figure}[!htb]
     \begin{center}
         \includegraphics[width=\columnwidth]{povzetek_trajektorij.pdf}
-        \caption{Število vzorcev in trajanje posnetih trajektorij.}
+        \caption{Število vzorcev in trajanje posnetih demonstracij.}
         \label{fig:povzetek}
     \end{center}
 \end{figure}
 
-Sklepni poteki na sliki~\ref{fig:sklepi} potrjujejo, da so trajektorije dovolj
-gladke za DMP zapis. Največ sprememb je v sklepih, ki prispevajo k premiku
-končnega efektorja po delovni površini; ostali sklepi predvsem držijo
-konfiguracijo roke. Pri rehabilitacijski izvedbi je to zaželeno, ker se naloga
-osredotoča na vodeno premikanje končnega efektorja, ne na iskanje nove
-kinematične konfiguracije.
+Sklepni poteki na sliki~\ref{fig:sklepi} prikazujejo, da so demonstrirani gibi
+zvezni in brez izrazitih skokov. Gibanje je porazdeljeno po več sklepih, kar je
+pričakovano pri sedemosnem redundantnem manipulatorju. Za rehabilitacijsko
+izvedbo je to ugodno, ker se naloga ne izvaja z izoliranim premikom enega
+sklepa, temveč kot koordinirano premikanje roke po delovni površini.
 
 \begin{figure}[!htb]
     \begin{center}
         \includegraphics[width=\columnwidth]{trajektorije_sklepi.pdf}
-        \caption{Sklepni poteki osnovnega premika in treh trajektorij žogice.}
+        \caption{Sklepni poteki osnovnega premika in treh trajektorij naloge z žogico.}
         \label{fig:sklepi}
     \end{center}
 \end{figure}
 
-Slika~\ref{fig:cmp} prikazuje normo CMP navorov. Norme niso neposredno ukazani
-navori pri vsaki izvedbi, ampak naučeni profili pred skaliranjem s
-\texttt{SPOSOBNOST}. Če je sposobnost uporabnika večja, se celoten profil
-zmanjša; če je sposobnost manjša, se profil ohrani bližje naučeni vrednosti,
-vendar ga še vedno omeji meja \eqref{eq:clip}. Ločeni profili naprej in nazaj
-so uporabni predvsem pri zaporedju žogica 1--2--3, ker robot po vsaki poti
-stabilno pride nazaj v izhodišče za naslednji gib.
+Naučeni CMP profili so povzeti na sliki~\ref{fig:cmp}. Prikazana je norma
+kompenzacijskega navornega profila pred skaliranjem s parametrom sposobnosti.
+Profili za nalogo z žogico imajo podobne velikostne rede, osnovni premik pa ima
+nekoliko manjšo povprečno normo. Pri dejanski rehabilitacijski izvedbi ti
+signali niso neposredno uporabljeni v polni velikosti, temveč se skalirajo,
+zvezno vklopijo z rampo in omejijo.
 
 \begin{figure}[!htb]
     \begin{center}
         \includegraphics[width=\columnwidth]{cmp_norme.pdf}
-        \caption{Norma naučenih CMP navorov za osnovni premik in trajektorije žogice.}
+        \caption{Norma naučenih CMP navornih profilov za osnovni premik in nalogo z žogico.}
         \label{fig:cmp}
+    \end{center}
+\end{figure}
+
+Primerjava smeri naprej in povratne smeri je prikazana na
+sliki~\ref{fig:cmp_smeri}. Čeprav sta trajektoriji v geometrijskem smislu
+povezani, navorni profili niso enaki. To potrjuje odločitev, da se za povratne
+gibe ne uporabi zgolj časovno obrnjen ali negiran signal, temveč ločeno naučen
+CMP profil.
+
+\begin{figure}[!htb]
+    \begin{center}
+        \includegraphics[width=\columnwidth]{cmp_smeri.pdf}
+        \caption{Primerjava norme CMP profilov za smer naprej in povratno smer pri treh gibih z žogico.}
+        \label{fig:cmp_smeri}
+    \end{center}
+\end{figure}
+
+V projektu so bili pregledani tudi pilotni zapisi z dodatno obremenitvijo.
+Slika~\ref{fig:obremenitev} prikazuje štiri pare demonstracij, pri katerih so
+na voljo kinematični podatki brez dodatne obremenitve in z dodatno
+obremenitvijo. V obremenjenem primeru so demonstracije trajale dlje, največja
+norma sklepnih hitrosti pa je bila manjša. Ker v neobremenjenih parih niso
+dosledno shranjeni navorni signali, iz teh podatkov ni mogoče narediti
+zanesljive primerjave navorov. Rezultat je zato uporabljen le kot pilotna
+indikacija, da dodatna obremenitev vpliva na način demonstracije.
+
+\begin{figure}[!htb]
+    \begin{center}
+        \includegraphics[width=\columnwidth]{obremenitev_pilot.pdf}
+        \caption{Pilotna primerjava trajanja in največje norme sklepnih hitrosti pri demonstracijah brez dodatne obremenitve in z njo.}
+        \label{fig:obremenitev}
     \end{center}
 \end{figure}
 
 \section{Razprava}
 
-Glavna tehnična vrednost projekta je ločitev med kinematično referenco in
-dinamično pomočjo. DMP poskrbi za ponovljivo, gladko pot; CMP pa doda
-navorni prispevek, ki ga je mogoče skalirati. Takšna arhitektura je boljša od
-ene same toge reference, ker omogoča več režimov vadbe brez ponovnega snemanja
-trajektorij. Isti nabor podatkov je uporaben za popolnejšo pomoč začetniku in
-za manjšo pomoč uporabniku, ki že zmore večji del giba sam.
+Rezultati potrjujejo, da je mogoče iz ročno vodenih demonstracij pripraviti
+ponovljive DMP reference in zanje naučiti CMP navorne profile. Glavna prednost
+takšne zasnove je ločitev med potjo in pomočjo. DMP določa, kam in kako naj se
+roka premika, CMP pa določa, koliko dodatnega navora naj robot prispeva pri
+izvedbi. Zato isti terapevtski gib ni vezan na eno samo stopnjo pomoči, temveč
+ga je mogoče prilagoditi uporabniku z nastavitvijo parametra sposobnosti.
 
-Druga pomembna odločitev je stabilizacija prehodov. Pri zaporednih nalogah
-robot ne sme med koncem ene poti in začetkom naslednje nenadzorovano popustiti.
-Zato notebook pred začetkom, med prehodi in po koncu trajektorije uporablja
-držanje ciljne lege. To ni kozmetičen popravek, temveč varnostni pogoj za
-laboratorijsko delo z realnim robotom.
+Ločeni profili za smer naprej in povratno smer so pomembni z vidika stabilnosti
+zaporednih nalog. Pri rehabilitacijski vaji se posamezni gibi ne izvajajo kot
+neodvisni laboratorijski poskusi, temveč kot zaporedje, v katerem mora robot po
+koncu ene poti varno prevzeti naslednjo. Aktivno držanje lege med prehodi
+prepreči nenadzorovano popuščanje manipulatorja, ločeni CMP profili pa zmanjšajo
+možnost sunkovitih navornih sprememb pri vračanju po poti.
 
-Omejitev trenutne verzije je, da parameter sposobnosti določi
-operater in je med poskusom konstanten. Bolj napredna rešitev bi sproti
-ocenjevala uporabnikov prispevek iz napake sledenja, merjenih navorov ali
-interakcijske sile. Takrat bi lahko $\alpha$ v enačbi~\eqref{eq:alpha}
-postala časovno spremenljiva vrednost. Dodatna nadgradnja bi bila filtriranje
-CMP signalov glede na utrujenost uporabnika, saj enak navorni profil na
-začetku in koncu terapije ni nujno enako primeren.
-
-Trenutni rezultati so zato predvsem validacija programske strukture in
-podatkovnega toka. Projekt ima pripravljeno osnovo za eksperimentalno
-primerjavo različnih vrednosti sposobnosti, za merjenje napake
-sledenja in za oceno, pri kateri nastavitvi uporabnik še aktivno sodeluje.
+Omejitev trenutnih rezultatov je, da ne vsebujejo sistematične primerjave več
+vrednosti parametra sposobnosti in ne vključujejo kliničnega testiranja z
+uporabniki. Prav tako ni dovolj ponovitev za statistično vrednotenje napake
+sledenja, uspešnosti naloge ali subjektivnega napora. Za kvantitativno
+vrednotenje bi bilo treba v nadaljevanju izvesti več ponovitev pri različnih
+stopnjah pomoči ter izračunati RMSE napake sledenja, največjo napako sledenja,
+normo dodanega CMP navora, uspešnost izvedbe naloge in uporabnikov občutek
+napora. Smiselna nadgradnja bi bila tudi sprotna ocena uporabnikovega prispevka
+iz napake sledenja, interakcijskih sil ali merjenih navorov, s čimer parameter
+sposobnosti ne bi bil konstanten, temveč časovno prilagodljiv.
 
 \section{Zaključek}
 
-Končna verzija projekta združuje DMP reference, CMP navorno pomoč in stabilno
-izvedbo zaporedja trajektorij. Podatki so urejeni v ločeno mapo, fotografije
-so pretvorjene v poročilu uporaben format, članek pa povzema metodo brez
-odvisnosti od starih razvojnih notebookov. Najpomembnejša funkcionalnost je
-parameter \texttt{SPOSOBNOST}, ki iz ene naučene trajektorije in enega CMP
-profila omogoči več stopenj robotske pomoči. S tem je projekt pripravljen za
-naslednji korak: sistematično testiranje uporabnikovega sodelovanja in
-adaptivno prilagajanje pomoči med vadbo.
+Predstavljen je bil laboratorijski rehabilitacijski sistem z robotom Franka
+Emika Panda, ki združuje DMP učenje demonstriranih gibov in CMP navorno pomoč
+pri izvedbi. Sistem uporablja štiri terapevtske gibe v sklepnem prostoru,
+ločene CMP profile za smer naprej in povratno smer ter nastavljivo skaliranje
+pomoči glede na sposobnost uporabnika. Rezultati kažejo, da so demonstracije
+primerne za gladko DMP reprodukcijo, CMP profili pa dajejo merljiv navorni
+prispevek, ki ga je mogoče uporabiti kot mehko pomoč. Sistem tako predstavlja
+osnovo za nadaljnje eksperimentalno vrednotenje prilagodljive robotske
+rehabilitacije zgornje okončine.
 
 \small
 \bibliographystyle{ieeetr}
